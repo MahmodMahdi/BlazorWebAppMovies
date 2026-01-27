@@ -1,0 +1,65 @@
+﻿@page "/genres/create"
+@using BlazorWebAppMovies.Dtos.Genre
+@using BlazorWebAppMovies.Services.GenreService
+@using BlazorWebAppMovies.UnitOfWork
+@using Microsoft.EntityFrameworkCore
+@using BlazorWebAppMovies.Models
+@* @inject IDbContextFactory<BlazorWebAppMovies.Data.BlazorWebAppMoviesContext> DbFactory
+ *@
+ @inject NavigationManager NavigationManager
+@inject IGenreService genreService
+
+<PageTitle>Create</PageTitle>
+
+<h1>Create</h1>
+
+<h2>Genre</h2>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="Genre" OnValidSubmit="AddGenre" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+@*             <ValidationSummary class="text-danger" role="alert"/>
+ *@            <div class="mb-3">
+                <label for="name" class="form-label">Name:</label> 
+                <InputText id="name" @bind-Value="Genre.Name" class="form-control" /> 
+                <ValidationMessage For="() => Genre.Name" class="text-danger" /> 
+                @if (!string.IsNullOrEmpty(ErrorMessage))
+                {
+                    // دي الرسالة اللي جاية من الـ IsAny اللي في الـ Service
+                    <span class="text-danger">@ErrorMessage</span>
+                }
+            </div>        
+            <div class="mb-3">
+                <label for="description" class="form-label">Description:</label> 
+                <InputText id="description" @bind-Value="Genre.Description" class="form-control" /> 
+                <ValidationMessage For="() => Genre.Description" class="text-danger" /> 
+            </div>        
+            <button type="submit" class="btn btn-primary">Create</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a href="/genres">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromForm]
+    private GenreCreateDto Genre { get; set; } = default!;
+    private string? ErrorMessage;
+    protected override void OnInitialized() => Genre ??= new();
+
+    private async Task AddGenre()
+    {
+        // using var context = DbFactory.CreateDbContext();
+        // context.Genre.Add(Genre);
+        // await context.SaveChangesAsync();
+        ErrorMessage = null;
+        var result = await genreService.AddAsync(Genre);
+        if (result.IsSuccess)
+            NavigationManager.NavigateTo("/genres");
+        else
+            ErrorMessage = result.Message;
+    }
+}

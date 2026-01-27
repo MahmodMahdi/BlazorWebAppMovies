@@ -1,0 +1,65 @@
+﻿@page "/genres"
+@using BlazorWebAppMovies.Dtos.Genre
+@using BlazorWebAppMovies.Services.GenreService
+@using BlazorWebAppMovies.UnitOfWork
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using BlazorWebAppMovies.Models
+@using BlazorWebAppMovies.Data
+@using System.Linq;
+@rendermode InteractiveServer
+@inject IGenreService genreService
+<PageTitle>Index</PageTitle>
+
+<h1>Index</h1>
+
+<p>
+    <a class="btn btn-primary" href="genres/create">Create New</a>
+</p>
+<div class="input-group">
+    <input type="text" class="form-control" placeholder="Search by Name..."
+           @bind="SearchString" @bind:event=oninput @onkeyup="()=>OnSearchInput(false)" />
+    <button type="button" @onclick="()=>OnSearchInput(true)" class="btn btn-primary">Search</button>
+</div>
+<QuickGrid Class="table" Items="genresQuery">
+    <PropertyColumn Property="genre => genre.Name" />
+    <PropertyColumn Property="genre => genre.Description" />
+
+    <TemplateColumn Context="genre">
+        <a href="@($"genres/edit?id={genre.Id}")">Edit</a> |
+        <a href="@($"genres/details?id={genre.Id}")">Details</a> |
+        <a href="@($"genres/delete?id={genre.Id}")">Delete</a>
+    </TemplateColumn>
+</QuickGrid>
+
+@code {
+    // نستخدم IQueryable لأن الـ QuickGrid تحبه جداً للفلترة والترتيب
+    private IQueryable<GenreReadDto>? genresQuery;
+    int CurrentPage = 1;
+    private string SearchString = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var genres = await genreService.GetAllAsync();
+        if (genres.IsSuccess && genres.Data != null)
+            genresQuery = genres.Data?.AsQueryable();
+    }
+    private async Task OnSearchInput(bool resetPage = false)
+    {
+        if (resetPage) CurrentPage = 1;
+        var result=await genreService.Search(SearchString);
+        if (result != null)
+            genresQuery = result.Data?.AsQueryable();
+    }
+    // لأن الـ UnitOfWork هو المسؤول عن تنظيف نفسه (Disposable)
+}
+@* @code {
+    private BlazorWebAppMoviesContext context = default!;
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+    }
+
+    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+} *@

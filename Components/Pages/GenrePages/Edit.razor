@@ -1,0 +1,115 @@
+﻿@page "/genres/edit"
+@using BlazorWebAppMovies.Dtos.Genre
+@using BlazorWebAppMovies.Services.GenreService
+@using BlazorWebAppMovies.UnitOfWork
+@using Microsoft.EntityFrameworkCore
+@using BlazorWebAppMovies.Models
+@inject IGenreService genreService  
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit</PageTitle>
+
+<h1>Edit</h1>
+
+<h2>Genre</h2>
+<hr />
+@if (Genre is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="Genre" OnValidSubmit="UpdateGenre" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary role="alert"/>
+                <input type="hidden" name="Genre.Id" value="@Genre.Id" />
+                <div class="mb-3">
+                    <label for="name" class="form-label">Name:</label>
+                    <InputText id="name" @bind-Value="Genre.Name" class="form-control" />
+                    <ValidationMessage For="() => Genre.Name" class="text-danger" />
+                    @if (!string.IsNullOrEmpty(ErrorMessage))
+                    {
+                        // دي الرسالة اللي جاية من الـ IsAny اللي في الـ Service
+                        <span class="text-danger">@ErrorMessage</span>
+                    }
+                </div>
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description:</label>
+                    <InputText id="description" @bind-Value="Genre.Description" class="form-control" />
+                    <ValidationMessage For="() => Genre.Description" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/genres">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    [SupplyParameterFromForm]
+    private GenreUpdateDto? Genre { get; set; }
+    private string? ErrorMessage;
+    protected override async Task OnInitializedAsync()
+    {
+        // using var context = DbFactory.CreateDbContext();
+
+        var result= await genreService.GetByIdAsync(Id);
+        if (result.IsSuccess && result.Data != null)
+
+            Genre ??= new GenreUpdateDto
+                {
+                    Id = result.Data.Id,
+                    Name = result.Data.Name,
+                    Description = result.Data.Description
+                };
+
+    }
+
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task UpdateGenre()
+    {
+        // using var context = DbFactory.CreateDbContext();
+        // context.Attach(Genre!).State = EntityState.Modified;
+
+        try
+        {
+            if (Genre is not null)
+            {
+                var result = await genreService.UpdateAsync(Genre!);
+                if (result.IsSuccess)
+                    NavigationManager.NavigateTo("/genres");
+                else
+                    ErrorMessage = result.Message;
+
+            }
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            // if (!GenreExists(Genre!.Id))
+            // {
+            //     NavigationManager.NotFound();
+            // }
+            // else
+            // {
+                throw;
+            // }
+        }
+
+        NavigationManager.NavigateTo("/genres");
+    }
+
+    // private bool GenreExists(int id)
+    // {
+    //     using var context = DbFactory.CreateDbContext();
+    //     return context.Genre.Any(e => e.Id == id);
+    // }
+}

@@ -1,0 +1,54 @@
+﻿@page "/genres/details"
+@using BlazorWebAppMovies.Dtos.Genre
+@using BlazorWebAppMovies.Services.GenreService
+@using BlazorWebAppMovies.UnitOfWork
+@using Microsoft.EntityFrameworkCore
+@using BlazorWebAppMovies.Models
+@* @inject IDbContextFactory<BlazorWebAppMovies.Data.BlazorWebAppMoviesContext> DbFactory
+ *@
+ @inject NavigationManager NavigationManager
+@inject IGenreService genreService
+
+<PageTitle>Details</PageTitle>
+
+<h1>Details</h1>
+
+<div>
+    <h2>Genre</h2>
+    <hr />
+    @if (genre is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">Name</dt>
+            <dd class="col-sm-10">@genre.Name</dd>
+            <dt class="col-sm-2">Description</dt>
+            <dd class="col-sm-10">@genre.Description</dd>
+        </dl>
+        <div>
+            <a class="btn btn-secondary" href="@($"/genres/edit?id={genre.Id}")">Edit</a> |
+            <a class="btn btn-primary" href="@($"/genres")">Back to List</a> 
+        </div>
+    }
+</div>
+
+@code {
+    private GenreReadDto? genre;
+
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // using var context = DbFactory.CreateDbContext();
+        // genre = await context.Genre.FirstOrDefaultAsync(m => m.Id == Id);
+        var result = await genreService.GetByIdAsync(Id);
+        if (result.IsSuccess)
+            genre = result.Data;
+        else
+            NavigationManager.NavigateTo("/genres");
+    }
+}
+

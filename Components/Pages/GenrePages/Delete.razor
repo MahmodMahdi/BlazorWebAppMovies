@@ -1,0 +1,74 @@
+﻿@page "/genres/delete"
+@using BlazorWebAppMovies.Dtos.Genre
+@using BlazorWebAppMovies.Services.GenreService
+@using BlazorWebAppMovies.UnitOfWork
+@using Microsoft.EntityFrameworkCore
+@using BlazorWebAppMovies.Models
+@* @inject IDbContextFactory<BlazorWebAppMovies.Data.BlazorWebAppMoviesContext> DbFactory
+ *@
+ @inject NavigationManager NavigationManager
+ @rendermode InteractiveServer
+@inject IGenreService genreService
+
+<PageTitle>Delete</PageTitle>
+
+<h1>Delete</h1>
+
+<p>Are you sure you want to delete this?</p>
+<div>
+    <h2>Genre</h2>
+    <hr />
+    @if (genre is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">Name</dt>
+            <dd class="col-sm-10">@genre.Name</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">Description</dt>
+            <dd class="col-sm-10">@genre.Description</dd>
+        </dl>
+        <EditForm method="post" Model="genre" OnValidSubmit="DeleteGenre" FormName="delete" Enhance>
+            <button type="submit" class="btn btn-danger" disabled="@(genre is null)">Delete</button> |
+            <a class="btn btn-primary" href="/genres">Back to List</a>
+        </EditForm>
+    }
+</div>
+
+@code {
+    private GenreReadDto? genre;
+
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+    private string ErrorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // using var context = DbFactory.CreateDbContext();
+        // genre = await context.Genre.FirstOrDefaultAsync(m => m.Id == Id);
+        var result = await genreService.GetByIdAsync(Id);
+        if (result.IsSuccess)
+            genre = result.Data;
+        else{
+            NavigationManager.NavigateTo("/genres");
+        }
+    }
+
+    private async Task DeleteGenre()
+    {
+        // using var context = DbFactory.CreateDbContext();
+        // context.Genre.Remove(genre!);
+        // await context.SaveChangesAsync();
+        var result = await genreService.DeleteAsync(Id!);
+        if (result.IsSuccess){
+            NavigationManager.NavigateTo("/genres");
+        }
+       
+        else
+            ErrorMessage = result.Message;
+        }
+}
+
