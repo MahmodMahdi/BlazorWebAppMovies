@@ -1,0 +1,131 @@
+﻿@page "/movies/create"
+@using BlazorWebAppMovies.Data
+@using BlazorWebAppMovies.Dtos.Genre
+@using BlazorWebAppMovies.Dtos.Movie
+@using BlazorWebAppMovies.GenericRepo
+@using BlazorWebAppMovies.Response
+@using BlazorWebAppMovies.Services.GenreService
+@using BlazorWebAppMovies.Services.MovieService
+@using BlazorWebAppMovies.UnitOfWork
+@using Microsoft.EntityFrameworkCore
+@using BlazorWebAppMovies.Models
+@using System.Threading.Tasks
+@* @inject IDbContextFactory<BlazorWebAppMoviesContext> DbFactory *@
+
+@inject IMovieService movieService 
+@inject IGenreService genreService
+@rendermode InteractiveServer
+ @inject NavigationManager NavigationManager
+
+<PageTitle>Create</PageTitle>
+
+<h1>Create</h1>
+
+<h2>Movie</h2>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="Movie" OnValidSubmit="AddMovie" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+@*             <ValidationSummary class="text-danger" role="alert"/>
+ *@            <div class="mb-3">
+                <label for="title" class="form-label">Title:</label> 
+                <InputText id="title" @bind-Value="Movie.Title" class="form-control" /> 
+                <ValidationMessage For="() => Movie.Title" class="text-danger" /> 
+                @if (!string.IsNullOrEmpty(ErrorMessage))
+                {
+                    // دي الرسالة اللي جاية من الـ IsAny اللي في الـ Service
+                    <span class="text-danger">@ErrorMessage</span>
+                }
+            </div>        
+            <div class="mb-3">
+                <label for="releasedate" class="form-label">ReleaseDate:</label> 
+                <InputDate id="releasedate" @bind-Value="Movie.ReleaseDate" class="form-control" /> 
+                <ValidationMessage For="() => Movie.ReleaseDate" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="genre" class="form-label">Genre:</label> 
+                <InputSelect @bind-Value="Movie.GenreId" class="form-control">
+                    <option value="">-- Select Genre --</option>
+                    @if (Genres != null)
+                    {
+                        foreach (var item in Genres)
+                        {
+                            <option value="@item.Id">@item.Name</option>
+                        }
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => Movie.GenreId" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="price" class="form-label">Price:</label> 
+                <InputNumber id="price" @bind-Value="Movie.Price" class="form-control" /> 
+                <ValidationMessage For="() => Movie.Price" class="text-danger" /> 
+            </div>        
+            <button type="submit" class="btn btn-primary">Create</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a href="/movies">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromForm]
+    private MovieCreateDto Movie { get; set; } = default!;
+    private IEnumerable<GenreReadDto>? Genres { get; set; }
+    private string? ErrorMessage;
+
+    protected override async Task OnInitializedAsync()  /*  => Movie ??= new(); */{
+        Movie ??= new();
+        var result =await genreService.GetAllAsync();
+        if (result.IsSuccess)
+        {
+            Genres = result.Data;
+        }
+    }
+
+    private async Task AddMovie()
+    {
+        ErrorMessage = null;
+        var result = await movieService.AddAsync(Movie);
+        if(result.IsSuccess)
+        {
+            NavigationManager.NavigateTo("/movies");
+        }
+        else
+        {
+            ErrorMessage = result.Message;
+        }
+    }
+}
+@*  <form> العادية، بنستخدم <EditForm> في Blazor لأنها أذكى بكتير:
+
+Model="Movie": بتقول للفورم: "إنتي مربوطة بالكائن اللي اسمه Movie اللي متعرف تحت".
+
+OnValidSubmit="AddMovie": دي أهم واحدة. بتقول للفورم: "لو المستخدم ملى البيانات صح وما فيش أخطاء، روحي نفذي دالة AddMovie".
+
+FormName="create": اسم تعريفي للفورم عشان لو الصفحة فيها أكتر من فورم ما يتلخبطوش.
+
+Enhance: دي ميزة في Blazor الجديد بتخلي الفورم تتبعت "بسرعة وسلاسة" من غير ما الصفحة تعمل Reload كامل.
+
+3. الـ Validation (الأمان والدقة)
+<DataAnnotationsValidator />: دي بتروح تقرأ الشروط اللي إنت كاتبها في موديل الـ Movie (مثلاً إن العنوان "Required" أو السعر له مدى معين) وتطبقها فوراً.
+
+<ValidationSummary />: بتعرض كل الأخطاء فوق في قائمة واحدة لو حصلت.
+
+<ValidationMessage For="..." />: بتعرض رسالة الخطأ "تحت كل خانة" بالظبط (مثلاً: "Title is required").
+
+4. الـ Inputs (خانات الإدخال)
+إنت استخدمت InputText, InputDate, و InputNumber. دي كائنات Blazor ذكية:
+
+@bind-Value="Movie.Title": ده "ربط اتجاهين". لو كتبت في الخانة، القيمة تروح للمتغير Movie في الـ C# فوراً، والعكس صحيح.
+
+5. الـ Code (العقل المدبر)
+أ. الـ Property:
+C#
+[SupplyParameterFromForm]
+private Movie Movie { get; set; } = default!;
+[SupplyParameterFromForm]: دي وظيفتها إنها تستقبل البيانات اللي جاية من الفورم لما المستخدم يدوس Submit وتحطها في كائن الـ Movie.
+ *@

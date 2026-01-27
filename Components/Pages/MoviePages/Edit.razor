@@ -1,0 +1,152 @@
+﻿@page "/movies/edit"
+@using BlazorWebAppMovies.Data
+@using BlazorWebAppMovies.Dtos.Genre
+@using BlazorWebAppMovies.Dtos.Movie
+@using BlazorWebAppMovies.GenericRepo
+@using BlazorWebAppMovies.Response
+@using BlazorWebAppMovies.Services.GenreService
+@using BlazorWebAppMovies.Services.MovieService
+@using BlazorWebAppMovies.UnitOfWork
+@using Microsoft.EntityFrameworkCore
+@using BlazorWebAppMovies.Models
+@* @inject IDbContextFactory<BlazorWebAppMoviesContext> DbFactory
+ *@
+@inject IGenreService genreService
+@inject IMovieService movieService
+
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit</PageTitle>
+
+<h1>Edit</h1>
+
+<h2>Movie</h2>
+<hr />
+@if (Movie is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="Movie" OnValidSubmit="UpdateMovie" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary role="alert" />
+                <input type="hidden" name="Movie.Id" value="@Movie.Id" />
+                <div class="mb-3">
+                    <label for="title" class="form-label">Title:</label>
+                    <InputText id="title" @bind-Value="Movie.Title" class="form-control" />
+                    <ValidationMessage For="() => Movie.Title" class="text-danger" />
+                    @if (!string.IsNullOrEmpty(ErrorMessage))
+                    {
+                        <span class="text-danger">@ErrorMessage</span>
+                    }
+                </div>
+                <div class="mb-3">
+                    <label for="releasedate" class="form-label">ReleaseDate:</label>
+                    <InputDate id="releasedate" @bind-Value="Movie.ReleaseDate" class="form-control" />
+                    <ValidationMessage For="() => Movie.ReleaseDate" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="genre" class="form-label">Genre:</label>
+                    <InputSelect id="genre" @bind-Value="Movie.GenreId" class="form-control">
+                        @foreach (var g in Genres)
+                        {
+                            <option value="@g.Id">@g.Name</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="() => Movie.GenreId" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="price" class="form-label">Price:</label>
+                    <InputNumber id="price" @bind-Value="Movie.Price" class="form-control" />
+                    <ValidationMessage For="() => Movie.Price" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/movies">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    [SupplyParameterFromForm]
+    private MovieUpdateDto? Movie { get; set; }
+    private string? ErrorMessage;
+
+    private IEnumerable<GenreReadDto> Genres { get; set; } = new List<GenreReadDto>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // using var context = DbFactory.CreateDbContext();
+        // Movie ??= await context.Movie.FirstOrDefaultAsync(m => m.Id == Id);
+        var result = await genreService.GetAllAsync();
+        if (result.IsSuccess)
+            Genres = result.Data;
+
+        var movie = await movieService.GetByIdAsync(Id);
+        if (movie.IsSuccess && movie.Data != null)
+        {
+            var data = movie.Data;
+            // i transform from MovieReadDto to MovieUpdateDto to Update item
+            Movie ??= new MovieUpdateDto
+            {
+                Id = data.Id,
+                Title = data.Title,
+                ReleaseDate = data.ReleaseDate,
+                Price = data.Price,
+                GenreId = data.GenreId
+            };
+        }
+        if (Movie is null)
+        {
+            NavigationManager.NotFound();
+        }
+    }
+
+    private async Task UpdateMovie()
+    {
+        // using var context = DbFactory.CreateDbContext();
+        // context.Attach(Movie!).State = EntityState.Modified;
+
+        try
+        {
+            ErrorMessage = null;
+            // await context.SaveChangesAsync();
+            var result = await movieService.UpdateAsync(Movie);
+            if (result.IsSuccess)
+            {
+                NavigationManager.NavigateTo("/movies");
+            }
+            else
+            {
+                ErrorMessage = result.Message;
+        }
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            // تكة احترافية: لو حد مسح الفيلم في نفس اللحظة اللي إنت بتعدله فيها
+            // if (!MovieExists(Movie!.Id))
+            // {
+            //     NavigationManager.NotFound();
+            // }
+            // else
+            // {
+            throw;
+            //}
+        }
+    }
+
+    // private bool MovieExists(int id)
+    // {
+    //     using var context = DbFactory.CreateDbContext();
+    //     return context.Movie.Any(e => e.Id == id);
+    // }
+}

@@ -1,0 +1,83 @@
+﻿@page "/movies/details"
+@using BlazorWebAppMovies.Data
+@using BlazorWebAppMovies.Dtos.Movie
+@using BlazorWebAppMovies.Services.MovieService
+@using BlazorWebAppMovies.UnitOfWork
+@using Microsoft.EntityFrameworkCore
+@using BlazorWebAppMovies.Models
+@* @inject IDbContextFactory<BlazorWebAppMoviesContext> DbFactory
+ *@@* here i want to move from page to page after action without click return to page*@
+@inject IMovieService movieService
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Details</PageTitle>
+
+<h1>Details</h1>
+
+<div>
+    <h2>Movie</h2>
+    <hr />
+    @if (movie is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">Title</dt>
+            <dd class="col-sm-10">@movie.Title</dd>
+            <dt class="col-sm-2">ReleaseDate</dt>
+            <dd class="col-sm-10">@movie.ReleaseDate</dd>
+            <dt class="col-sm-2">Genre</dt>
+            <dd class="col-sm-10">@(movie.GenreName ?? "No Genres")</dd>
+            <dt class="col-sm-2">Price</dt>
+            <dd class="col-sm-10">@movie.Price</dd>
+        </dl>
+        <div>
+            <a class="btn btn-info" href="@($"/movies/edit?id={movie.Id}")">Edit</a> |
+            <button class="btn btn-danger" @onclick="DeleteMovie">Delete</button>
+            <a class="btn btn-primary" href="@($"/movies")">Back to List</a>
+        </div>
+    }
+</div>
+
+@code {
+    private MovieReadDto? movie;
+
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // using var context = DbFactory.CreateDbContext();
+        // movie = await context.Movie.AsNoTracking().FirstOrDefaultAsync(m => m.Id == Id);
+        var result = await movieService.GetByIdAsync(Id);
+        if (result.IsSuccess)
+            movie = result.Data;
+        else
+            NavigationManager.NotFound();
+    }
+    // private async Task DeleteMovie()
+    // {
+    //     if(movie != null)
+    //     {
+    //         await movieService.DeleteAsync(movie.Id);
+    //         NavigationManager.NavigateTo("/movies");
+    //     }
+    // }
+    private async Task DeleteMovie()
+    {
+        if (movie != null)
+        {
+            // إضافة تأكيد قبل الحذف لضمان عدم الخطأ
+            bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to delete '{movie.Title}'?");
+
+            if (confirmed)
+            {
+                var result = await movieService.DeleteAsync(Id);
+                    NavigationManager.NavigateTo("/movies");
+            }
+        }
+    }
+}
