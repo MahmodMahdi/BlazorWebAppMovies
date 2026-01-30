@@ -2,9 +2,14 @@ using BlazorWebAppMovies;
 using BlazorWebAppMovies.Components;
 using BlazorWebAppMovies.Data;
 using BlazorWebAppMovies.Middlewares;
+using BlazorWebAppMovies.Models;
+using BlazorWebAppMovies.Services.AuthenticationService;
+using BlazorWebAppMovies.Services.AuthService;
 using BlazorWebAppMovies.Services.GenreService;
+using BlazorWebAppMovies.Services.IFileService;
 using BlazorWebAppMovies.Services.MovieService;
 using BlazorWebAppMovies.UnitOfWork;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -15,7 +20,7 @@ builder.Services.AddDbContextFactory<BlazorWebAppMoviesContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("BlazorWebAppMoviesContext") ?? throw new InvalidOperationException("Connection string 'BlazorWebAppMoviesContext' not found.")));
 
 // Identity
-builder.Services.AddIdentity<IdentityUser, IdentityRole>(option =>
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(option =>
 {
     option.SignIn.RequireConfirmedAccount = false;
 })
@@ -35,10 +40,12 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IMovieService, MovieService>();
 builder.Services.AddScoped<IGenreService, GenreService>();
-
+builder.Services.AddScoped<IImageService, ImageService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 //builder.Services.AddDbContext<BlazorWebAppMovieContext>(option =>
 //option.UseSqlServer(builder.Configuration.GetConnectionString("DB")));
 
