@@ -14,7 +14,6 @@
 
 @inject IMovieService movieService 
 @inject IGenreService genreService
-@rendermode InteractiveServer
  @inject NavigationManager NavigationManager
 
 <PageTitle>Create</PageTitle>
@@ -39,6 +38,11 @@
                 }
             </div>        
             <div class="mb-3">
+                <label for="poster" class="form-label">Poster:</label>
+                <InputFile OnChange="@(e=> Movie.Poster = e.File)" class="form-control" accept=".jpg,.png,.jpeg,.webp,.gif"/>
+                <ValidationMessage For="() => Movie.Poster" class="text-danger" />
+            </div>
+            <div class="mb-3">
                 <label for="releasedate" class="form-label">ReleaseDate:</label> 
                 <InputDate id="releasedate" @bind-Value="Movie.ReleaseDate" class="form-control" /> 
                 <ValidationMessage For="() => Movie.ReleaseDate" class="text-danger" /> 
@@ -61,7 +65,7 @@
                 <label for="price" class="form-label">Price:</label> 
                 <InputNumber id="price" @bind-Value="Movie.Price" class="form-control" /> 
                 <ValidationMessage For="() => Movie.Price" class="text-danger" /> 
-            </div>        
+            </div>      
             <button type="submit" class="btn btn-primary">Create</button>
         </EditForm>
     </div>

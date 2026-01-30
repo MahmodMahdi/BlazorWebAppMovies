@@ -71,6 +71,7 @@ else
     <table class="table table-striped">
         <thead>
             <tr>
+                <th>Poster</th>
                 <th>Title</th>
                 <th>Release Date</th>
                 <th>Genre</th>
@@ -82,6 +83,23 @@ else
             @foreach (var movie in movies)
             {
                 <tr>
+                    <td>
+                        @{
+                            // إصلاح المسار برمجياً: حذف wwwroot لو موجود وإضافة / في البداية
+                            var imagePath = movie.Poster;
+                            if (!string.IsNullOrEmpty(imagePath))
+                            {
+                                imagePath = imagePath.Replace("wwwroot/", ""); // حذف كلمة wwwroot لو كانت متخزنة
+                                if (!imagePath.StartsWith("/")) imagePath = "/" + imagePath; // التأكد من وجود /
+                            }
+                            else
+                            {
+                                imagePath = "images/no-image.png";
+                            }
+                        }
+                        <img src="@(string.IsNullOrEmpty(movie.Poster) ? "images/no-image.png":movie.Poster)"
+                         alt="Poster" class="rounded shadow-sm" style="width: 50px; height:75px; object-fit:contain;"/>
+                    </td>
                     <td>@movie.Title</td>
                     <td>@movie.ReleaseDate</td>
                     <td>@(movie.GenreName?? "No Genre")</td>
@@ -117,7 +135,7 @@ else
     private string SearchString = string.Empty;
     private int TotalPages = 0;
     private int CurrentPage = 1;
-    private int PageSize = 10;
+    private int PageSize = 8;
 
     protected override async Task OnInitializedAsync()
     {
@@ -142,7 +160,6 @@ else
     private async Task OnSearchInput(ChangeEventArgs e)
     {
         SearchString = e.Value?.ToString() ?? string.Empty;
-        // شيلنا الـ if وخليناه يفلتر مع كل حرف بيتكتب أو بيتمسح
         await FilterMovies(true);
     }
     private async Task ChangePage(int newPage)

@@ -13,8 +13,8 @@
  *@
 @inject IGenreService genreService
 @inject IMovieService movieService
-
-@inject NavigationManager NavigationManager
+ @rendermode InteractiveServer
+ @inject NavigationManager NavigationManager
 
 <PageTitle>Edit</PageTitle>
 
@@ -30,10 +30,10 @@ else
 {
     <div class="row">
         <div class="col-md-4">
-            <EditForm method="post" Model="Movie" OnValidSubmit="UpdateMovie" FormName="edit" Enhance>
+            <EditForm Model="Movie" OnValidSubmit="UpdateMovie" >
                 <DataAnnotationsValidator />
-                <ValidationSummary role="alert" />
-                <input type="hidden" name="Movie.Id" value="@Movie.Id" />
+@*                 <ValidationSummary role="alert" />
+ *@                <input type="hidden" name="Movie.Id" value="@Movie.Id" />
                 <div class="mb-3">
                     <label for="title" class="form-label">Title:</label>
                     <InputText id="title" @bind-Value="Movie.Title" class="form-control" />
@@ -44,18 +44,33 @@ else
                     }
                 </div>
                 <div class="mb-3">
+                    <label for="poster" class="form-label">Poster:</label>
+                    <InputFile OnChange="@(e => Movie.Poster = e.File)" class="form-control" accept=".jpg,.png,.jpeg,.webp,.gif" />
+                    <ValidationMessage For="() => Movie.Poster" class="text-danger" />
+                </div>
+                <div class="mb-3">
                     <label for="releasedate" class="form-label">ReleaseDate:</label>
                     <InputDate id="releasedate" @bind-Value="Movie.ReleaseDate" class="form-control" />
                     <ValidationMessage For="() => Movie.ReleaseDate" class="text-danger" />
                 </div>
                 <div class="mb-3">
                     <label for="genre" class="form-label">Genre:</label>
-                    <InputSelect id="genre" @bind-Value="Movie.GenreId" class="form-control">
-                        @foreach (var g in Genres)
-                        {
-                            <option value="@g.Id">@g.Name</option>
-                        }
-                    </InputSelect>
+                    @if (Genres.Any())
+                    {
+                        <InputSelect id="genre"
+                                     @bind-Value="Movie.GenreId"
+                                     class="form-control">
+                            @foreach (var g in Genres)
+                            {
+                                <option value="@g.Id">@g.Name</option>
+                            }
+                        </InputSelect>
+                    }
+                    else
+                    {
+                        <p>Loading genres...</p>
+                    }
+
                     <ValidationMessage For="() => Movie.GenreId" class="text-danger" />
                 </div>
                 <div class="mb-3">
@@ -70,15 +85,18 @@ else
 }
 
 <div>
-    <a href="/movies">Back to List</a>
+    <a href="/">Back to List</a>
 </div>
 
 @code {
     [SupplyParameterFromQuery]
     private int Id { get; set; }
 
-    [SupplyParameterFromForm]
+    //[SupplyParameterFromForm]
     private MovieUpdateDto? Movie { get; set; }
+
+    //private IBrowserFile? SelectedPoster;
+
     private string? ErrorMessage;
 
     private IEnumerable<GenreReadDto> Genres { get; set; } = new List<GenreReadDto>();
@@ -102,8 +120,13 @@ else
                 Title = data.Title,
                 ReleaseDate = data.ReleaseDate,
                 Price = data.Price,
+                CurrentPosterPath = data.Poster,
                 GenreId = data.GenreId
             };
+        }
+        if (!Genres.Any(g => g.Id == Movie.GenreId))
+        {
+            Movie.GenreId = Genres.FirstOrDefault()?.Id ?? 0;
         }
         if (Movie is null)
         {
@@ -119,6 +142,7 @@ else
         try
         {
             ErrorMessage = null;
+            // Movie.Poster = SelectedPoster;
             // await context.SaveChangesAsync();
             var result = await movieService.UpdateAsync(Movie);
             if (result.IsSuccess)
@@ -144,9 +168,4 @@ else
         }
     }
 
-    // private bool MovieExists(int id)
-    // {
-    //     using var context = DbFactory.CreateDbContext();
-    //     return context.Movie.Any(e => e.Id == id);
-    // }
 }
