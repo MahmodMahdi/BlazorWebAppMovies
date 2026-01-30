@@ -6,5 +6,6 @@ namespace BlazorWebAppMovies.Dtos.Movie
 	{
 		[Required]
 		public int Id { get; set; }
+		public string? CurrentPosterPath { get; set; }
 	}
 }

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using Microsoft.AspNetCore.Components.Forms;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -17,6 +18,7 @@ namespace BlazorWebAppMovies.Dtos.Movie
 		[Required]
 		[Range(1, 1000)]
 		public decimal Price { get; set; }
+		public IBrowserFile Poster { get; set; }
 		[Required]
 		public int GenreId { get; set; }
 	}

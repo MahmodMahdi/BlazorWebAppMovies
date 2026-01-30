@@ -10,6 +10,7 @@ namespace BlazorWebAppMovies.Dtos.Movie
 		public string Title { get; set; }
 		public DateOnly ReleaseDate { get; set; }
 		public decimal Price { get; set; }
+		public string Poster { get; set; }
 		public int GenreId { get; set; }
 		[DisplayName("Genre")]
 		public string GenreName { get; set; }
