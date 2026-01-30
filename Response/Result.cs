@@ -19,7 +19,7 @@
 			return new Result
 			{
 				IsSuccess = false,
-				Message = errorMessage
+				ErrorMessage = errorMessage
 			};
 		}
 	}
