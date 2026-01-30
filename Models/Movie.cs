@@ -10,6 +10,7 @@ namespace BlazorWebAppMovies.Models
 		public string Title { get; set; }
 		public DateOnly ReleaseDate { get; set; }	
 		public decimal Price { get; set; }
+		public string? Poster { get; set; }
 		[DisplayName("Genre")]
 		public int GenreId { get; set; }
 		[ForeignKey(nameof(GenreId))]
