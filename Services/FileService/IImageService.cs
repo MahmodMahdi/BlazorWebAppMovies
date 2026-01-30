@@ -1,7 +1,7 @@
 ﻿using BlazorWebAppMovies.Response;
 using Microsoft.AspNetCore.Components.Forms;
 
-namespace BlazorWebAppMovies.Services.IFileService
+namespace BlazorWebAppMovies.Services.FileService
 {
 	public interface IImageService
 	{

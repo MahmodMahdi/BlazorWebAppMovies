@@ -1,8 +1,7 @@
-﻿using BlazorWebAppMovies.Components;
-using BlazorWebAppMovies.Dtos.Movie;
+﻿using BlazorWebAppMovies.Dtos.Movie;
 using BlazorWebAppMovies.Models;
 using BlazorWebAppMovies.Response;
-using BlazorWebAppMovies.Services.IFileService;
+using BlazorWebAppMovies.Services.FileService;
 using BlazorWebAppMovies.UnitOfWork;
 using System.Linq.Expressions;
 

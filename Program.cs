@@ -6,14 +6,11 @@ using BlazorWebAppMovies.Models;
 using BlazorWebAppMovies.Services.AuthenticationService;
 using BlazorWebAppMovies.Services.AuthService;
 using BlazorWebAppMovies.Services.GenreService;
-using BlazorWebAppMovies.Services.IFileService;
+using BlazorWebAppMovies.Services.FileService;
 using BlazorWebAppMovies.Services.MovieService;
 using BlazorWebAppMovies.UnitOfWork;
-using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContextFactory<BlazorWebAppMoviesContext>(options =>

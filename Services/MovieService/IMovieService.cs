@@ -1,7 +1,5 @@
 ﻿using BlazorWebAppMovies.Dtos.Movie;
-using BlazorWebAppMovies.Models;
 using BlazorWebAppMovies.Response;
-using System.Linq.Expressions;
 
 namespace BlazorWebAppMovies.Services.MovieService
 {
