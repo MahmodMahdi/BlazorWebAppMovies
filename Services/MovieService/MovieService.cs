@@ -1,6 +1,8 @@
-﻿using BlazorWebAppMovies.Dtos.Movie;
+﻿using BlazorWebAppMovies.Components;
+using BlazorWebAppMovies.Dtos.Movie;
 using BlazorWebAppMovies.Models;
 using BlazorWebAppMovies.Response;
+using BlazorWebAppMovies.Services.IFileService;
 using BlazorWebAppMovies.UnitOfWork;
 using System.Linq.Expressions;
 
@@ -9,9 +11,11 @@ namespace BlazorWebAppMovies.Services.MovieService
 	public class MovieService : IMovieService
 	{
 		private readonly IUnitOfWork _unitOfWork;
-		public MovieService(IUnitOfWork unitOfWork)
+		private readonly IImageService _imageService;
+		public MovieService(IUnitOfWork unitOfWork,IImageService imageService)
 		{
 			_unitOfWork = unitOfWork;
+			_imageService = imageService;
 		}
 		public async Task<Result<IEnumerable<MovieReadDto>>> GetAllAsync()
 		{
@@ -24,6 +28,7 @@ namespace BlazorWebAppMovies.Services.MovieService
 					Title = m.Title,
 					ReleaseDate = m.ReleaseDate,
 					Price = m.Price,
+					Poster = m.Poster,
 					GenreName = m.Genre?.Name ?? "N/A"
 				});
 				return Result<IEnumerable<MovieReadDto>>.Success(dto);
@@ -48,6 +53,7 @@ namespace BlazorWebAppMovies.Services.MovieService
 					Title = movie.Title,
 					ReleaseDate = movie.ReleaseDate,
 					Price = movie.Price,
+					Poster = movie.Poster,
 					GenreName = movie.Genre?.Name ?? "N/A"
 				};
 				return Result<MovieReadDto>.Success(dto);
@@ -70,11 +76,16 @@ namespace BlazorWebAppMovies.Services.MovieService
 				if (isExist)
 					return Result.Failure("Title is already exist");
 
+				var uploadResult = await _imageService.UploadAsync(movieDto.Poster, "Movie");
+				if (!uploadResult.IsSuccess)
+					return Result.Failure(uploadResult.ErrorMessage);
+
 				var movie = new Movie
 				{
 					Title = movieDto.Title.Trim(),
 					ReleaseDate = movieDto.ReleaseDate,
 					Price = movieDto.Price,
+					Poster = uploadResult.Data,
 					GenreId = movieDto.GenreId
 				};
 				await _unitOfWork.MovieRepository.AddAsync(movie);
@@ -101,6 +112,19 @@ namespace BlazorWebAppMovies.Services.MovieService
 				if (isExist)
 					return Result.Failure("Title is already exist");
 
+				if(movieDto.Poster != null)
+				{
+					var uploadResult = await _imageService.UploadAsync(movieDto.Poster, "Movies");
+					
+					if (!uploadResult.IsSuccess)
+						return Result.Failure(uploadResult.ErrorMessage);
+					
+					if (!string.IsNullOrEmpty(existingMovie.Poster))
+						await _imageService.DeleteAsync(existingMovie.Poster);
+
+					existingMovie.Poster = uploadResult.Data;
+				}
+
 				existingMovie.Id = movieDto.Id;
 				existingMovie.Title = movieDto.Title;
 				existingMovie.ReleaseDate = movieDto.ReleaseDate;
@@ -126,7 +150,8 @@ namespace BlazorWebAppMovies.Services.MovieService
 				var movie = await _unitOfWork.MovieRepository.GetByIdAsync(x => x.Id == id);
 				if (movie is null)
 					return Result.Failure("Movie not found");
-
+				if (!string.IsNullOrEmpty(movie.Poster))
+					await _imageService.DeleteAsync(movie.Poster);
 				await _unitOfWork.MovieRepository.DeleteAsync(id);
 				var deleted = await _unitOfWork.CompleteAsync();
 
@@ -164,6 +189,7 @@ namespace BlazorWebAppMovies.Services.MovieService
 					Title = m.Title,
 					Price = m.Price,
 					ReleaseDate = m.ReleaseDate,
+					Poster = m.Poster,
 					GenreName = m.Genre?.Name ?? "N/A"
 				}).ToList();
 				var pagedResult = new PagedResult<MovieReadDto>(dtos,pagedMovie.TotalCount,pagedMovie.PageNumber,pagedMovie.PageSize);
