@@ -268,8 +268,7 @@ dotnet run
 .NET Backend Developer
 
 📧 Email: [MahmoudElmahdy555@gmail.com](mailto:MahmoudElmahdy555@gmail.com)
-🔗 GitHub | LinkedIn
-
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/mahmoud-amin-145272290)
 ---
 
 ⭐ If you like this project, don’t forget to give it a star!
